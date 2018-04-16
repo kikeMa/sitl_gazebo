@@ -41,8 +41,6 @@ if (BUILD_GSTREAMER_PLUGIN)
   endif()
 endif()
 
-pkg_check_modules(OGRE OGRE)
-
 include_directories(SYSTEM ${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
@@ -146,11 +144,7 @@ include_directories(
   # Workaround for Eigen3
   ${Boost_INCLUDE_DIR}/eigen3
   ${EIGEN3_INCLUDE_DIRS}/eigen3
-  ${OGRE_INCLUDE_DIRS}
-  # workaround for: "fatal error: OgrePagedWorldSection.h: No such file or directory"
-  ${OGRE_INCLUDE_DIRS}/Paging
   # Workaround for OGRE include dirs on Mac OS
-  # TODO: remove these hardcoded includes now that we have
   /usr/local/include/OGRE
   /usr/local/include/OGRE/Paging
   ${MAVLINK_INCLUDE_DIRS}
@@ -180,7 +174,6 @@ endif()
 link_directories(
   ${GAZEBO_LIBRARY_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${OGRE_LIBRARY_DIRS}
   )
 
 #--------------------------#
@@ -247,6 +240,7 @@ set (msgs
   msgs/SensorImu.proto
   msgs/opticalFlow.proto
   msgs/lidar.proto
+  msgs/sweep.proto
   msgs/CommandMotorSpeed.proto
   msgs/MotorSpeed.proto
   #msgs/Wind.proto
@@ -279,6 +273,8 @@ add_library(rotors_gazebo_imu_plugin SHARED src/gazebo_imu_plugin.cpp)
 add_library(gazebo_opticalFlow_plugin SHARED src/gazebo_opticalFlow_plugin.cpp)
 target_link_libraries(gazebo_opticalFlow_plugin ${OpticalFlow_LIBS})
 add_library(gazebo_lidar_plugin SHARED src/gazebo_lidar_plugin.cpp)
+add_library(gazebo_sweep_v1_plugin SHARED src/gazebo_sweep_v1_plugin.cpp)
+add_library(gazebo_rotate_ray_plugin SHARED src/gazebo_rotate_ray_plugin.cpp)
 add_library(gazebo_irlock_plugin SHARED src/gazebo_irlock_plugin.cpp)
 add_library(rotors_gazebo_mavlink_interface SHARED src/gazebo_mavlink_interface.cpp src/geo_mag_declination.cpp)
 #add_library(rotors_gazebo_wind_plugin SHARED src/gazebo_wind_plugin.cpp)
@@ -294,6 +290,8 @@ set(plugins
   rotors_gazebo_imu_plugin
   gazebo_opticalFlow_plugin
   gazebo_lidar_plugin
+  gazebo_sweep_v1_plugin
+  gazebo_rotate_ray_plugin
   gazebo_irlock_plugin
   rotors_gazebo_mavlink_interface
   #rotors_gazebo_wind_plugin
@@ -369,13 +367,6 @@ endif()
 foreach(plugin ${plugins})
   add_dependencies(${plugin} mav_msgs)
 endforeach()
-
-# Configure the setup script
-if (catkin_FOUND)
-  catkin_add_env_hooks(50_sitl_gazebo_setup
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-    SHELLS sh)
-endif()
 
 #############
 ## Install ##
