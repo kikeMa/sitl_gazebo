@@ -59,6 +59,7 @@
 #include <SensorImu.pb.h>
 #include <opticalFlow.pb.h>
 #include <lidar.pb.h>
+#include <sweep.pb.h>
 #include <sonarSens.pb.h>
 #include <SITLGps.pb.h>
 #include <irlock.pb.h>
@@ -85,6 +86,7 @@ namespace gazebo {
 typedef const boost::shared_ptr<const mav_msgs::msgs::CommandMotorSpeed> CommandMotorSpeedPtr;
 typedef const boost::shared_ptr<const sensor_msgs::msgs::Imu> ImuPtr;
 typedef const boost::shared_ptr<const lidar_msgs::msgs::lidar> LidarPtr;
+typedef const boost::shared_ptr<const sweep_msgs::msgs::sweep> SweepPtr;
 typedef const boost::shared_ptr<const opticalFlow_msgs::msgs::opticalFlow> OpticalFlowPtr;
 typedef const boost::shared_ptr<const sonarSens_msgs::msgs::sonarSens> SonarSensPtr;
 typedef const boost::shared_ptr<const irlock_msgs::msgs::irlock> IRLockPtr;
@@ -101,6 +103,7 @@ static const std::string kDefaultMotorVelocityReferencePubTopic = "/gazebo/comma
 
 static const std::string kDefaultImuTopic = "/imu";
 static const std::string kDefaultLidarTopic = "/link/lidar";
+static const std::string kDefaultSweepTopic = "/link/sweep";
 static const std::string kDefaultOpticalFlowTopic = "/px4flow/link/opticalFlow";
 static const std::string kDefaultSonarTopic = "/sonar_model/link/sonar";
 static const std::string kDefaultIRLockTopic = "/camera/link/irlock";
@@ -129,6 +132,7 @@ public:
     imu_sub_topic_(kDefaultImuTopic),
     opticalFlow_sub_topic_(kDefaultOpticalFlowTopic),
     lidar_sub_topic_(kDefaultLidarTopic),
+		sweep_sub_topic_(kDefaultSweepTopic),
     sonar_sub_topic_(kDefaultSonarTopic),
     irlock_sub_topic_(kDefaultIRLockTopic),
     gps_sub_topic_(kDefaultGPSTopic),
@@ -218,6 +222,7 @@ private:
   void GpsCallback(GpsPtr& gps_msg);
   void GroundtruthCallback(GtPtr& groundtruth_msg);
   void LidarCallback(LidarPtr& lidar_msg);
+	void SweepCallback(SweepPtr& sweep_msg);
   void SonarCallback(SonarSensPtr& sonar_msg);
   void OpticalFlowCallback(OpticalFlowPtr& opticalFlow_msg);
   void IRLockCallback(IRLockPtr& irlock_msg);
@@ -252,6 +257,7 @@ private:
 
   transport::SubscriberPtr imu_sub_;
   transport::SubscriberPtr lidar_sub_;
+	transport::SubscriberPtr sweep_sub_;
   transport::SubscriberPtr sonar_sub_;
   transport::SubscriberPtr opticalFlow_sub_;
   transport::SubscriberPtr irlock_sub_;
@@ -261,6 +267,7 @@ private:
 
   std::string imu_sub_topic_;
   std::string lidar_sub_topic_;
+	std::string sweep_sub_topic_;
   std::string opticalFlow_sub_topic_;
   std::string sonar_sub_topic_;
   std::string irlock_sub_topic_;

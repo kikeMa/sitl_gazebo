@@ -55,6 +55,7 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
   getSdfParam<std::string>(_sdf, "imuSubTopic", imu_sub_topic_, imu_sub_topic_);
   getSdfParam<std::string>(_sdf, "gpsSubTopic", gps_sub_topic_, gps_sub_topic_);
   getSdfParam<std::string>(_sdf, "lidarSubTopic", lidar_sub_topic_, lidar_sub_topic_);
+  getSdfParam<std::string>(_sdf, "SweepSubTopic", sweep_sub_topic_, sweep_sub_topic_);
   getSdfParam<std::string>(_sdf, "opticalFlowSubTopic",
       opticalFlow_sub_topic_, opticalFlow_sub_topic_);
   getSdfParam<std::string>(_sdf, "sonarSubTopic", sonar_sub_topic_, sonar_sub_topic_);
@@ -184,6 +185,7 @@ void GazeboMavlinkInterface::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf
   // Subscriber to IMU sensor_msgs::Imu Message and SITL message
   imu_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + imu_sub_topic_, &GazeboMavlinkInterface::ImuCallback, this);
   lidar_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + lidar_sub_topic_, &GazeboMavlinkInterface::LidarCallback, this);
+  sweep_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + sweep_sub_topic_, &GazeboMavlinkInterface::SweepCallback, this);
   opticalFlow_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + opticalFlow_sub_topic_, &GazeboMavlinkInterface::OpticalFlowCallback, this);
   sonar_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + sonar_sub_topic_, &GazeboMavlinkInterface::SonarCallback, this);
   irlock_sub_ = node_handle_->Subscribe("~/" + model_->GetName() + irlock_sub_topic_, &GazeboMavlinkInterface::IRLockCallback, this);
@@ -692,6 +694,25 @@ void GazeboMavlinkInterface::LidarCallback(LidarPtr& lidar_message) {
 
   //distance needed for optical flow message
   optflow_distance = lidar_message->current_distance();  //[m]
+
+  mavlink_message_t msg;
+  mavlink_msg_distance_sensor_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &sensor_msg);
+  send_mavlink_message(&msg);
+}
+
+void GazeboMavlinkInterface::SweepCallback(SweepPtr& sweep_message) {
+  mavlink_distance_sensor_t sensor_msg;
+  sensor_msg.time_boot_ms = sweep_message->time_msec();
+  sensor_msg.min_distance = sweep_message->min_distance() * 100.0;
+  sensor_msg.max_distance = sweep_message->max_distance() * 100.0;
+  sensor_msg.current_distance = sweep_message->current_distance() * 100.0;
+  sensor_msg.type = 0;
+  sensor_msg.id = 0;
+  sensor_msg.orientation = sweep_message->degrees();
+  sensor_msg.covariance = 0;
+
+  //distance needed for optical flow message
+  optflow_distance = sweep_message->current_distance();  //[m]
 
   mavlink_message_t msg;
   mavlink_msg_distance_sensor_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &sensor_msg);
