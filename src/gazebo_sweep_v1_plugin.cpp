@@ -170,15 +170,18 @@ void SweepPlugin::OnNewLaserScans()
 
   float degree = this->pose_.rot.GetYaw()*(180/M_PI);
 
+  // Los angulos los recibimos como 180 grados positivos y 180 negativos, transformación
   if (degree < 0) {
     degree = 360.0 + degree;
-  //  gzwarn << "Grados: " << degree << "\n";
   }
 
   sweep_message.set_degrees(degree);
 
   // set distance to min/max if actual value is smaller/bigger
   if (current_distance < min_distance_ || std::isinf(current_distance)) {
+    if (std::isinf(current_distance)){
+      current_distance = 0.0;
+    }
     current_distance = min_distance_;
   } else if (current_distance > max_distance_) {
     current_distance = max_distance_;

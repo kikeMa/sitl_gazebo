@@ -708,7 +708,7 @@ void GazeboMavlinkInterface::SweepCallback(SweepPtr& sweep_message) {
   sensor_msg.current_distance = sweep_message->current_distance() * 100.0;
   sensor_msg.type = 0;
   sensor_msg.id = 0;
-  sensor_msg.orientation = sweep_message->degrees();
+  sensor_msg.orientation = round(sweep_message->degrees()); // Redondeo el angulo ya que orientation corresponde a uint16_t
   sensor_msg.covariance = 0;
 
   //distance needed for optical flow message
