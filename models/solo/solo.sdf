@@ -534,7 +534,7 @@
 </joint>
 
 <plugin name="rotate_ray" filename="libgazebo_rotate_ray_plugin.so">
-  <velocity>1</velocity>
+  <velocity>4</velocity>
 </plugin>
 <plugin name='rosbag' filename='librotors_gazebo_multirotor_base_plugin.so'>
   <robotNamespace></robotNamespace>
