@@ -119,11 +119,8 @@ void SweepPlugin::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     gzwarn << "\nImprime orientacion x " << this->model_->GetName() << "\n";
   #endif
 
+
     this->link_ = this->model_->GetLink(_parent->ParentName());
-
-
-
-
 
   // get maximum distance
   if (_sdf->HasElement("max_distance")) {
@@ -135,6 +132,11 @@ void SweepPlugin::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
     gzwarn << "[gazebo_lidar_plugin] Using default maximum distance: 15\n";
     max_distance_ = DEFAULT_MAX_DISTANCE;
   }
+
+  min_distance_front = max_distance_;
+  min_distance_left = max_distance_;
+  min_distance_back = max_distance_;
+  min_distance_right = max_distance_;
 
   node_handle_ = transport::NodePtr(new transport::Node());
   node_handle_->Init(namespace_);
@@ -148,7 +150,7 @@ void SweepPlugin::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
   boost::split(names_splitted,scopedName,boost::is_any_of("::"));
   string topicName = "~/" + names_splitted[0] + "/link/sweep";
 
-  sweep_pub_ = node_handle_->Advertise<sweep_msgs::msgs::sweep>(topicName, 10);
+  sweep_pub_ = node_handle_->Advertise<sweep_msgs::msgs::sweep>(topicName, 1);
 }
 
 /////////////////////////////////////////////////
@@ -171,25 +173,85 @@ void SweepPlugin::OnNewLaserScans()
   float degree = this->pose_.rot.GetYaw()*(180/M_PI);
 
   // Los angulos los recibimos como 180 grados positivos y 180 negativos, transformación
-  if (degree < 0) {
+  /*
+    if (degree < 0) {
     degree = 360.0 + degree;
   }
+  */
 
-  sweep_message.set_degrees(degree);
+  //std::cerr << "Angulo gazebo    " << degree << "\n";
+
 
   // set distance to min/max if actual value is smaller/bigger
-  if (current_distance < min_distance_ || std::isinf(current_distance)) {
-    if (std::isinf(current_distance)){
-      current_distance = 0.0;
+
+  if (!std::isinf(current_distance) && current_distance > min_distance_) {
+
+    if (current_distance > max_distance_) {
+      current_distance = max_distance_;
     }
-    current_distance = min_distance_;
-  } else if (current_distance > max_distance_) {
-    current_distance = max_distance_;
+
+    // Front
+    if (degree > -45 && degree < 45  ) {
+      if (min_distance_front > current_distance) {
+        min_distance_front = current_distance;
+      }
+    }
+
+    // Left
+    if (degree > 45 && degree < 135 ) {
+      if (min_distance_left > current_distance) {
+        min_distance_left = current_distance;
+      }
+    }
+
+    // Back
+    if (degree > 135 || degree < -135 ) {
+      if (min_distance_back > current_distance) {
+        min_distance_back = current_distance;
+      }
+    }
+
+    // Right
+    if (degree > -135 && degree < -45 ) {
+      if (min_distance_right > current_distance) {
+        min_distance_right = current_distance;
+      }
+    }
   }
 
+  // Front
+  if (degree > -45 && degree < 45  ) {
+    min_distance_back = max_distance_;
+    sweep_message.set_degrees(3);
+    sweep_message.set_current_distance(min_distance_right);
+    sweep_pub_->Publish(sweep_message);
+  }
 
+  // Left
+  if (degree > 45 && degree < 135 ) {
+    min_distance_right = max_distance_;
+    sweep_message.set_degrees(0);
+    sweep_message.set_current_distance(min_distance_front);
+    sweep_pub_->Publish(sweep_message);
+  }
 
-  sweep_message.set_current_distance(current_distance);
+  // Back
+  if (degree > 135 || degree < -135 ) {
+    min_distance_front = max_distance_;
+    sweep_message.set_degrees(1);
+    sweep_message.set_current_distance(min_distance_left);
+    sweep_pub_->Publish(sweep_message);
+  }
 
-  sweep_pub_->Publish(sweep_message);
+  // Right
+  if (degree > -135 && degree < -45 ) {
+    min_distance_left = max_distance_;
+    sweep_message.set_degrees(2);
+    sweep_message.set_current_distance(min_distance_back);
+    sweep_pub_->Publish(sweep_message);
+  }
+
+  //sweep_message.set_current_distance(current_distance);
+
+  //sweep_pub_->Publish(sweep_message);
 }

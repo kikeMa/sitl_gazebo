@@ -68,7 +68,10 @@ namespace gazebo
       std::string namespace_;
       double min_distance_;
       double max_distance_;
-
+      double min_distance_front;
+      double min_distance_left;
+      double min_distance_back;
+      double min_distance_right;
 
     /// \brief The connection tied to RayPlugin::OnNewLaserScans()
     private:

@@ -713,6 +713,8 @@ void GazeboMavlinkInterface::SweepCallback(SweepPtr& sweep_message) {
 
   //distance needed for optical flow message
   optflow_distance = sweep_message->current_distance();  //[m]
+  
+  // std::cerr << "Angulo gazebo    " << sensor_msg.orientation << "\n";
 
   mavlink_message_t msg;
   mavlink_msg_distance_sensor_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &sensor_msg);
